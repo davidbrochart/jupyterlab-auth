@@ -1,1 +1,10 @@
-@import url('base.css');
+.jp-AuthWidget {
+  padding: 10px;
+  color: var(--jp-ui-font-color1);
+  background: var(--jp-layout-color1);
+  font-size: 24px;
+  display: flex;
+  text-align: center;
+  justify-content: center;
+/*  align-items: center; */
+}
