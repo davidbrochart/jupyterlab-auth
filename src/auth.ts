@@ -1,8 +1,9 @@
 import {
-  JupyterFrontEnd, JupyterFrontEndPlugin
+  JupyterFrontEnd,
+  JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
-import { requestAPI } from './handler'
+import { requestAPI } from './handler';
 
 import { AuthWidget } from './widget';
 
@@ -12,7 +13,7 @@ function request(path: string, widget: AuthWidget) {
   return requestAPI<any>(path)
     .then(data => {
       console.log('Got a response from the jupyterlab-auth server API', data);
-      widget.setUsers(data)
+      widget.setUsers(data);
     })
     .catch(reason => {
       console.error(
@@ -31,7 +32,6 @@ const auth: JupyterFrontEndPlugin<void> = {
     app.shell.add(widget, 'left', { rank: 300 });
     request('users', widget);
   }
-
 };
 
 export default auth;

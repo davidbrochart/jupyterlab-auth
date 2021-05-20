@@ -8,20 +8,18 @@ import { ReactWidget } from '@jupyterlab/apputils';
  * @returns The React component
  */
 const AuthComponent = (data: any): JSX.Element => {
-  const users = data.users.users
+  const users = data.users.users;
   return (
     <div>
-      {
-        users.map((user: any) =>
-          <div key={user.login}>
-            <a href={`https://github.com/${user.login}`} target="_blank">
-              <img src={user.avatar_url} style={{width: '100px'}}/>
-              <div>{user.login}</div>
-            </a>
-            <hr/>
-          </div>
-        )
-      }
+      {users.map((user: any) => (
+        <div key={user.login}>
+          <a href={`https://github.com/${user.login}`} target="_blank">
+            <img src={user.avatar_url} style={{ width: '100px' }} />
+            <div>{user.login}</div>
+          </a>
+          <hr />
+        </div>
+      ))}
     </div>
   );
 };
@@ -30,7 +28,6 @@ const AuthComponent = (data: any): JSX.Element => {
  * A Auth Lumino Widget that wraps a AuthComponent.
  */
 export class AuthWidget extends ReactWidget {
-
   private users: [] = [];
 
   /**
@@ -42,12 +39,11 @@ export class AuthWidget extends ReactWidget {
   }
 
   render(): JSX.Element {
-    return <AuthComponent users={this.users}/>;
+    return <AuthComponent users={this.users} />;
   }
 
-  setUsers(users: []) {
+  setUsers(users: []): void {
     this.users = users;
     this.update();
   }
-
 }
