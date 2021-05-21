@@ -16,6 +16,7 @@ const AuthComponent = (data: any): JSX.Element => {
           <a href={`https://github.com/${user.login}`} target="_blank">
             <img src={user.avatar_url} style={{ width: '100px' }} />
             <div>{user.login}</div>
+            <div>{user.name}</div>
           </a>
           <hr />
         </div>

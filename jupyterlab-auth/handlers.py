@@ -3,6 +3,7 @@ from base64 import encodebytes
 import hmac
 import hashlib
 import os
+import urllib
 
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.base.handlers import JupyterHandler
@@ -12,25 +13,34 @@ from jupyter_server.auth.login import LoginHandler
 from jupyter_server.auth.logout import LogoutHandler
 
 import tornado
+from tornado import escape
+from tornado.auth import OAuth2Mixin
+from tornado import httpclient
 
-USERS = []
+ACCESS_TOKENS = []
 
 class RouteHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
     # patch, put, delete, options) to ensure only authorized user can request the
     # Jupyter server
     @tornado.web.authenticated
-    def get(self):
-        user = self.current_user.decode()
-        response = {
-            "users": [
+    async def get(self):
+        users = {"users": []}
+        for access_token in ACCESS_TOKENS:
+            response = await httpclient.AsyncHTTPClient().fetch(
+                "https://api.github.com/user",
+                method="GET",
+                headers={"Authorization": "token " + access_token},
+            )
+            body = json.loads(response.body.decode())
+            users["users"].append(
                 {
-                    "login": user,
-                    "avatar_url": f"https://github.com/{user}.png"
-                } for user in USERS
-            ],
-        }
-        self.finish(json.dumps(response));
+                    "login": body["login"],
+                    "name": body["name"],
+                    "avatar_url": f"https://github.com/{body['login']}.png"
+                }
+            )
+        self.finish(json.dumps(users));
 
 
 def setup_handlers(web_app):
@@ -42,34 +52,79 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, handlers)
 
 
-# authentication with a simple form
-
 def get_current_user(self):
-    user = self.get_secure_cookie("user")
-    return user
+    return self.get_secure_cookie("access_token")
 
 JupyterHandler.get_current_user = get_current_user
 
-class MyLoginHandler(LoginHandler):
-    def get(self):
+OAuth2Mixin._OAUTH_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
+OAuth2Mixin._OAUTH_ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token"
+
+class MyLoginHandler(OAuth2Mixin, LoginHandler):
+    async def get_access_token(self, code):
+        client_id = self.get_secure_cookie("client_id")
+        client_secret = self.get_secure_cookie("client_secret")
+        if not (client_id and client_secret):
+            return ""
+        body = urllib.parse.urlencode(
+            {
+                "code": code,
+                "client_id": client_id.decode(),
+                "client_secret": client_secret.decode()
+            }
+        )
+        http = self.get_auth_http_client()
+        response = await http.fetch(
+            self._OAUTH_ACCESS_TOKEN_URL,
+            method="POST",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            body=body,
+        )
+        r = urllib.parse.parse_qs(response.body.decode())
+        if "access_token" in r:
+            return r["access_token"][0]
+        return ""
+
+    async def get(self):
         if self.current_user:
             self.redirect("/")
             return
-        self.write('<html><body><form action="/login" method="post">' + self.xsrf_form_html() + \
-                   'Name: <input type="text" name="name">'
-                   '<input type="submit" value="Sign in">'
-                   '</form></body></html>')
+        client_id = self.get_secure_cookie("client_id")
+        client_secret = self.get_secure_cookie("client_secret")
+        if not (client_id and client_secret):
+            self.write('<html><body><form action="/login" method="post">' + self.xsrf_form_html() + \
+                       'Client ID: <input type="text" name="client_id">'
+                       'Client secret: <input type="text" name="client_secret">'
+                       '<input type="submit" value="Sign in">'
+                       '</form></body></html>')
+            return
+        if self.get_argument('code', False):
+            access_token = await self.get_access_token(code=self.get_argument('code'))
+            if not access_token:
+                self.clear_cookie("client_id")
+                self.clear_cookie("client_secret")
+                self.redirect("/login")
+                return
+            self.set_secure_cookie("access_token", access_token)
+            ACCESS_TOKENS.append(access_token)
+            self.redirect("/")
+        else:
+            self.authorize_redirect(
+                client_id=client_id.decode(),
+                scope=['read:user'],)
 
     def post(self):
-        user = self.get_argument("name")
-        self.set_secure_cookie("user", user)
-        USERS.append(user)
-        self.redirect("/")
+        self.set_secure_cookie("client_id", self.get_argument("client_id"))
+        self.set_secure_cookie("client_secret", self.get_argument("client_secret"))
+        self.redirect("/login")
 
 class MyLogoutHandler(LogoutHandler):
     def get(self):
-        USERS.remove(self.current_user.decode())
-        self.clear_cookie("user")
+        if self.current_user:
+            ACCESS_TOKENS.remove(self.current_user.decode())
+        self.clear_cookie("access_token")
+        self.clear_cookie("client_id")
+        self.clear_cookie("client_secret")
         self.redirect("/login")
 
 ServerApp.login_handler_class = MyLoginHandler
