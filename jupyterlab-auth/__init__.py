@@ -36,3 +36,6 @@ def _load_jupyter_server_extension(server_app):
     """
     setup_handlers(server_app.web_app)
     server_app.log.info("Registered authentication extension at URL path /jupyterlab-auth")
+
+# For backward compatibility with notebook server - useful for Binder/JupyterHub
+load_jupyter_server_extension = _load_jupyter_server_extension

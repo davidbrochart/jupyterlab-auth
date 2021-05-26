@@ -30,6 +30,9 @@ data_files_spec = [
     ("share/jupyter/labextensions/%s" % labext_name, str(lab_path), "**"),
     ("share/jupyter/labextensions/%s" % labext_name, str(HERE), "install.json"),("etc/jupyter/jupyter_server_config.d",
      "jupyter-config", "jupyterlab-auth.json"),
+    # For backward compatibility with notebook server
+    ("etc/jupyter/jupyter_notebook_config.d",
+     "jupyter-config/nb-config", "jupyterlab-auth.json"),
 ]
 
 post_develop = npm_builder(

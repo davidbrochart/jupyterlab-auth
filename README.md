@@ -1,6 +1,6 @@
 # jupyterlab-auth
 
-![Github Actions Status](https://github.com/davidbrochart/jupyterlab-auth/workflows/Build/badge.svg)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/davidbrochart/jupyterlab-auth/main?urlpath=lab)
+![Github Actions Status](https://github.com/davidbrochart/jupyterlab-auth/workflows/Build/badge.svg)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/davidbrochart/jupyterlab-auth/main?urlpath=lab-dev)
 
 A JupyterLab extension for authentication.
 
