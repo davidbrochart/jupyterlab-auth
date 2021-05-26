@@ -35,4 +35,4 @@ def _load_jupyter_server_extension(server_app):
         JupyterLab application instance
     """
     setup_handlers(server_app.web_app)
-    server_app.log.info("Registered HelloWorld extension at URL path /jupyterlab-auth")
+    server_app.log.info("Registered authentication extension at URL path /jupyterlab-auth")

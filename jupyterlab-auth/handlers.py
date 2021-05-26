@@ -19,10 +19,7 @@ from tornado import httpclient
 
 ACCESS_TOKENS = []
 
-class RouteHandler(APIHandler):
-    # The following decorator should be present on all verb methods (head, get, post,
-    # patch, put, delete, options) to ensure only authorized user can request the
-    # Jupyter server
+class UsersRouteHandler(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         users = {"users": []}
@@ -40,6 +37,8 @@ class RouteHandler(APIHandler):
                     "avatar_url": f"https://github.com/{body['login']}.png"
                 }
             )
+            if self.current_user == access_token:
+                users["me"] = body["login"]
         self.finish(json.dumps(users));
 
 
@@ -47,13 +46,18 @@ def setup_handlers(web_app):
     host_pattern = ".*$"
 
     base_url = web_app.settings["base_url"]
-    route_pattern = url_path_join(base_url, "auth", "users")
-    handlers = [(route_pattern, RouteHandler)]
+    users_route_pattern = url_path_join(base_url, "auth", "users")
+    handlers = [(users_route_pattern, UsersRouteHandler)]
     web_app.add_handlers(host_pattern, handlers)
 
 
 def get_current_user(self):
-    return self.get_secure_cookie("access_token")
+    access_token = self.get_secure_cookie("access_token")
+    if access_token is not None:
+        access_token = access_token.decode()
+        if access_token in ACCESS_TOKENS:
+            return access_token
+    return None
 
 JupyterHandler.get_current_user = get_current_user
 
