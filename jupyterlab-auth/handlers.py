@@ -125,7 +125,7 @@ class MyLoginHandler(OAuth2Mixin, LoginHandler):
 class MyLogoutHandler(LogoutHandler):
     def get(self):
         if self.current_user:
-            ACCESS_TOKENS.remove(self.current_user.decode())
+            ACCESS_TOKENS.remove(self.current_user)
         self.clear_cookie("access_token")
         self.clear_cookie("client_id")
         self.clear_cookie("client_secret")

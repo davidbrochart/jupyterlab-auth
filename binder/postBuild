@@ -7,13 +7,13 @@ cd jupyterlab-yjs_awareness
 pip install -e .
 jlpm
 jlpm build
-#cd ..
-#
-#pip install -e .
-#
-#jupyter labextension develop . --overwrite
-#jupyter server extension enable jupyterlab-auth
-#jlpm run build
-#jupyter server extension list
-#jupyter labextension list
-#jupyter lab build
+cd ..
+
+pip install -e .
+
+jupyter labextension develop . --overwrite
+jupyter server extension enable jupyterlab-auth
+jlpm run build
+jupyter server extension list
+jupyter labextension list
+jupyter lab build

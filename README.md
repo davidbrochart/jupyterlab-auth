@@ -1,6 +1,6 @@
 # jupyterlab-auth
 
-![Github Actions Status](https://github.com/davidbrochart/jupyterlab-auth/workflows/Build/badge.svg)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/davidbrochart/jupyterlab-auth/main?urlpath=lab-dev)
+![Github Actions Status](https://github.com/davidbrochart/jupyterlab-auth/workflows/Build/badge.svg)
 
 A JupyterLab extension for authentication.
 
@@ -10,92 +10,59 @@ for the server extension and a NPM package named `jupyterlab-auth`
 for the frontend extension.
 
 
-## Requirements
-
-* JupyterLab >= 3.0
-
 ## Install
 
 To install the extension, execute:
 
 ```bash
-pip install jupyterlab-auth
-```
+mamba create -n jupyterlab-auth-dev
+conda activate jupyterlab-auth-dev
+mamba install pip nodejs
 
-## Uninstall
-
-To remove the extension, execute:
-
-```bash
-pip uninstall jupyterlab-auth
-```
-
-
-## Troubleshoot
-
-If you are seeing the frontend extension, but it is not working, check
-that the server extension is enabled:
-
-```bash
-jupyter server extension list
-```
-
-If the server extension is installed and enabled, but you are not seeing
-the frontend extension, check the frontend extension is installed:
-
-```bash
-jupyter labextension list
-```
-
-
-## Contributing
-
-### Development install
-
-Note: You will need NodeJS to build the extension package.
-
-The `jlpm` command is JupyterLab's pinned version of
-[yarn](https://yarnpkg.com/) that is installed with JupyterLab. You may use
-`yarn` or `npm` in lieu of `jlpm` below.
-
-```bash
-# Clone the repo to your local environment
-# Change directory to the jupyterlab-auth directory
-# Install package in development mode
+wget -q https://github.com/davidbrochart/jupyterlab/archive/yjs_awareness.tar.gz -O jlab.tar.gz
+tar zxf jlab.tar.gz
+cd jupyterlab-yjs_awareness
 pip install -e .
-# Link your development version of the extension with JupyterLab
+jlpm
+jlpm build
+cd ..
+
+pip install -e .
 jupyter labextension develop . --overwrite
-# Server extension must be manually installed in develop mode
 jupyter server extension enable jupyterlab-auth
-# Rebuild extension Typescript source after making changes
 jlpm run build
+jupyter server extension list
+jupyter labextension list
+jupyter lab build
+
+jupyter lab --dev-mode --extensions-in-dev-mode --collaborative
 ```
 
-You can watch the source directory and run JupyterLab at the same time in different terminals to watch for changes in the extension's source and automatically rebuild the extension.
+## Authentication with GitHub
 
-```bash
-# Watch the source directory in one terminal, automatically rebuilding when needed
-jlpm run watch
-# Run JupyterLab in another terminal
-jupyter lab
-```
+You will need to authorize JupyterLab to access your GitHub information. We only need the
+`read:user` scope, which grants access to read a user's profile data (see the
+[available scopes](https://docs.github.com/en/developers/apps/building-oauth-apps/scopes-for-oauth-apps#available-scopes)).
 
-With the watch command running, every saved change will immediately be built locally and available in your running JupyterLab. Refresh JupyterLab to load the change in your browser (you may need to wait several seconds for the extension to be rebuilt).
+You can register a new OAuth application [here](https://github.com/settings/applications/new):
+- Application name: JupyterLab
+- Homepage URL: http://localhost:8888/login
+- Authorization callback URL: http://localhost:8888/login
 
-By default, the `jlpm run build` command generates the source maps for this extension to make it easier to debug using the browser dev tools. To also generate source maps for the JupyterLab core extensions, you can run the following command:
+`localhost` and `8888` are the IP and port number, respectively. You might have to change them
+according to your particular setup.
 
-```bash
-jupyter lab build --minimize=False
-```
+This will generate a client ID for you, and you must also generate a client secret.
 
-### Development uninstall
+When navigating to the Jupyter server (either because JupyterLab automatically opens a new tab in
+your browser or by manually going to e.g. http://localhost:8888), you should land to the
+login page, where you can enter your client ID and secret. After authentication, you should be
+allowed access and redirected to JupyterLab.
 
-```bash
-# Server extension must be manually disabled in develop mode
-jupyter server extension disable jupyterlab-auth
-pip uninstall jupyterlab-auth
-```
+Try opening e.g. http://localhost:8888 in another browser. Here again, you have to provide your
+client ID and secret. It is fine if they are the same as before, you will just be authenticated as
+the same user. You can see the connected users by opening the tab on the left. Also, when you see
+the cursor of another user in a notebook cell, you can place your mouse over it and it should show
+you the user name.
 
-In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
-command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
-folder is located. Then you can remove the symlink named `jupyterlab-auth` within that folder.
+You can log out by navigating to e.g. http://localhost:8888/logout.
