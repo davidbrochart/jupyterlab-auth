@@ -1,6 +1,4 @@
 import json
-from base64 import encodebytes
-import hmac
 import hashlib
 import os
 import urllib
@@ -134,8 +132,18 @@ class MyLogoutHandler(LogoutHandler):
 ServerApp.login_handler_class = MyLoginHandler
 ServerApp.logout_handler_class = MyLogoutHandler
 
-# set a cookie secret so that the user gets invalidated outside of this browser
 
-key = encodebytes(os.urandom(32))
-h = hmac.new(key, digestmod=hashlib.sha256)
-ServerApp.cookie_secret = h.digest()
+# Authorization
+
+def my_authorization_method(self, user, action, resource):
+    """My override for handling authorization in Jupyter services."""
+
+    # Add logic here to check if user is allowed.
+    # For example, here is an example of a read-only server
+    #if action in ['write', 'execute']:
+    #    return False
+
+    return True
+
+# Patch the user_is_authorized method with my own method.
+JupyterHandler.user_is_authorized = my_authorization_method

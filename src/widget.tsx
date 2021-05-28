@@ -1,6 +1,7 @@
+import { Message } from '@lumino/messaging';
 import React from 'react';
-
 import { ReactWidget } from '@jupyterlab/apputils';
+import { requestAPI } from './handler';
 
 /**
  * React auth component.
@@ -37,6 +38,31 @@ export class AuthWidget extends ReactWidget {
   constructor() {
     super();
     this.addClass('jp-AuthWidget');
+  }
+
+  request(path: string) {
+    return requestAPI<any>(path)
+      .then(data => {
+        console.log('Got a response from the jupyterlab-auth server API', data);
+        this.setUsers(data);
+      })
+      .catch(reason => {
+        console.error(
+          `The jupyterlab-auth server API appears to be missing.\n${reason}`
+        );
+      });
+  }
+
+  /**
+   * A message handler invoked on a `'before-show'` message.
+   *
+   * #### Notes
+   * The default implementation of this handler is a no-op.
+   */
+  onBeforeShow(msg: Message): void {
+    // Trigger request when the widget is displayed
+    this.request('users');
+    super.onBeforeShow(msg);
   }
 
   render(): JSX.Element {

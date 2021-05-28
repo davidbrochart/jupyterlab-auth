@@ -35,6 +35,8 @@ jupyter server extension list
 jupyter labextension list
 jupyter lab build
 
+pip install https://github.com/Zsailer/jupyter_server/archive/authorization.zip
+
 jupyter lab --dev-mode --extensions-in-dev-mode --collaborative
 ```
 
