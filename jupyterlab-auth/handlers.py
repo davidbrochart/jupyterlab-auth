@@ -15,29 +15,22 @@ from tornado import escape
 from tornado.auth import OAuth2Mixin
 from tornado import httpclient
 
-ACCESS_TOKENS = []
+USERS = {}
 
 class UsersRouteHandler(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         users = {"users": []}
-        for access_token in ACCESS_TOKENS:
-            response = await httpclient.AsyncHTTPClient().fetch(
-                "https://api.github.com/user",
-                method="GET",
-                headers={"Authorization": "token " + access_token},
-            )
-            body = json.loads(response.body.decode())
+        for login in USERS:
             users["users"].append(
                 {
-                    "login": body["login"],
-                    "name": body["name"],
-                    "avatar_url": f"https://github.com/{body['login']}.png"
+                    "login": login,
+                    "name": USERS[login]["name"],
+                    "avatar_url": USERS[login]["avatar_url"]
                 }
             )
-            if self.current_user == access_token:
-                users["me"] = body["login"]
-        self.finish(json.dumps(users));
+        users["me"] = self.current_user["login"]
+        self.finish(json.dumps(users))
 
 
 def setup_handlers(web_app):
@@ -50,12 +43,14 @@ def setup_handlers(web_app):
 
 
 def get_current_user(self):
-    access_token = self.get_secure_cookie("access_token")
-    if access_token is not None:
-        access_token = access_token.decode()
-        if access_token in ACCESS_TOKENS:
-            return access_token
-    return None
+    user = self.get_secure_cookie("user")
+    if user is None:
+        return
+    user = json.loads(user.decode())
+    login = user["login"]
+    if login not in USERS:
+        USERS[login] = user
+    return user
 
 JupyterHandler.get_current_user = get_current_user
 
@@ -95,8 +90,9 @@ class MyLoginHandler(OAuth2Mixin, LoginHandler):
         client_secret = self.get_secure_cookie("client_secret")
         if not (client_id and client_secret):
             self.write('<html><body><form action="/login" method="post">' + self.xsrf_form_html() + \
-                       'Client ID: <input type="text" name="client_id">'
-                       'Client secret: <input type="text" name="client_secret">'
+                       '<p>Please enter below the client ID and secret that you got from GitHub.</p>'
+                       '<p>Client ID: <input type="text" name="client_id"></p>'
+                       '<p>Client secret: <input type="text" name="client_secret"></p>'
                        '<input type="submit" value="Sign in">'
                        '</form></body></html>')
             return
@@ -107,8 +103,15 @@ class MyLoginHandler(OAuth2Mixin, LoginHandler):
                 self.clear_cookie("client_secret")
                 self.redirect("/login")
                 return
-            self.set_secure_cookie("access_token", access_token)
-            ACCESS_TOKENS.append(access_token)
+            response = await httpclient.AsyncHTTPClient().fetch(
+                "https://api.github.com/user",
+                method="GET",
+                headers={"Authorization": "token " + access_token},
+            )
+            body = response.body.decode()
+            user = json.loads(body)
+            USERS[user["login"]] = user
+            self.set_secure_cookie("user", body)
             self.redirect("/")
         else:
             self.authorize_redirect(
@@ -122,9 +125,12 @@ class MyLoginHandler(OAuth2Mixin, LoginHandler):
 
 class MyLogoutHandler(LogoutHandler):
     def get(self):
-        if self.current_user:
-            ACCESS_TOKENS.remove(self.current_user)
-        self.clear_cookie("access_token")
+        user = self.current_user
+        if user is not None:
+            login = user["login"]
+            if login in USERS:
+                del USERS[login]
+        self.clear_cookie("user")
         self.clear_cookie("client_id")
         self.clear_cookie("client_secret")
         self.redirect("/login")

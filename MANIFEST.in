@@ -8,6 +8,8 @@ include install.json
 include ts*.json
 include yarn.lock
 
+recursive-include binder *
+
 graft jupyterlab-auth/labextension
 
 # Javascript files
