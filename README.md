@@ -67,4 +67,5 @@ the same user. You can see the connected users by opening the tab on the left. A
 the cursor of another user in a notebook cell, you can place your mouse over it and it should show
 you the user name.
 
-You can log out by navigating to e.g. http://localhost:8888/logout.
+You can log out by navigating to e.g. http://localhost:8888/logout, or by clicking on your user
+login in the menu (on the right), and then "Sign out".

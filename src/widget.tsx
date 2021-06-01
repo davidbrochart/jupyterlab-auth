@@ -30,7 +30,7 @@ const AuthComponent = (data: any): JSX.Element => {
  * A Auth Lumino Widget that wraps a AuthComponent.
  */
 export class AuthWidget extends ReactWidget {
-  private users: [] = [];
+  private users: { users: []; me: string } = { users: [], me: '' };
 
   /**
    * Constructs a new CounterWidget.
@@ -40,10 +40,9 @@ export class AuthWidget extends ReactWidget {
     this.addClass('jp-AuthWidget');
   }
 
-  request(path: string) {
+  request(path: string): Promise<any> {
     return requestAPI<any>(path)
       .then(data => {
-        console.log('Got a response from the jupyterlab-auth server API', data);
         this.setUsers(data);
       })
       .catch(reason => {
@@ -69,7 +68,7 @@ export class AuthWidget extends ReactWidget {
     return <AuthComponent users={this.users} />;
   }
 
-  setUsers(users: []): void {
+  setUsers(users: { users: []; me: string }): void {
     this.users = users;
     this.update();
   }

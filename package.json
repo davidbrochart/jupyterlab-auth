@@ -47,6 +47,7 @@
   "dependencies": {
     "@jupyterlab/application": "^3.0.0",
     "@jupyterlab/coreutils": "^5.0.0",
+    "@jupyterlab/mainmenu": "^3.0.9",
     "@jupyterlab/services": "^6.0.0"
   },
   "devDependencies": {

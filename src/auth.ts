@@ -1,16 +1,43 @@
 import {
   JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  JupyterFrontEndPlugin,
+  IRouter
 } from '@jupyterlab/application';
 
 import { AuthWidget } from './widget';
 
 import { reactIcon } from '@jupyterlab/ui-components';
 
+import { IMainMenu } from '@jupyterlab/mainmenu';
+
+import { Menu } from '@lumino/widgets';
+
+import { requestAPI } from './handler';
+
 const auth: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlab-auth',
+  requires: [IMainMenu, IRouter],
   autoStart: true,
-  activate: (app: JupyterFrontEnd) => {
+  activate: (app: JupyterFrontEnd, mainMenu: IMainMenu, router: IRouter) => {
+    app.commands.addCommand('user:logout', {
+      label: 'Sign out',
+      isEnabled: () => true,
+      isVisible: () => true,
+      execute: () => {
+        router.navigate('/logout', { hard: true });
+      }
+    });
+
+    requestAPI<any>('users').then(data => {
+      const menu = new Menu({ commands: app.commands });
+      menu.title.label = data.me;
+      menu.addItem({
+        command: 'user:logout',
+        args: {}
+      });
+      mainMenu.addMenu(menu, { rank: 2000 });
+    });
+
     const widget = new AuthWidget();
     widget.id = 'jupyterlab-auth';
     widget.title.icon = reactIcon;
