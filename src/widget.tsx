@@ -30,7 +30,7 @@ const AuthComponent = (data: any): JSX.Element => {
  * A Auth Lumino Widget that wraps a AuthComponent.
  */
 export class AuthWidget extends ReactWidget {
-  private users: { users: []; me: string } = { users: [], me: '' };
+  private users: { users: [] } = { users: [] };
 
   /**
    * Constructs a new CounterWidget.
@@ -68,7 +68,7 @@ export class AuthWidget extends ReactWidget {
     return <AuthComponent users={this.users} />;
   }
 
-  setUsers(users: { users: []; me: string }): void {
+  setUsers(users: { users: [] }): void {
     this.users = users;
     this.update();
   }

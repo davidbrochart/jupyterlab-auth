@@ -15,7 +15,15 @@ from tornado import escape
 from tornado.auth import OAuth2Mixin
 from tornado import httpclient
 
+
 USERS = {}
+
+AUTHORIZATION = {}
+auth_fname = "auth.json"
+if os.path.exists(auth_fname):
+    with open(auth_fname) as f:
+        AUTHORIZATION = json.load(f)
+
 
 class UsersRouteHandler(APIHandler):
     @tornado.web.authenticated
@@ -29,8 +37,14 @@ class UsersRouteHandler(APIHandler):
                     "avatar_url": USERS[login]["avatar_url"]
                 }
             )
-        users["me"] = self.current_user["login"]
         self.finish(json.dumps(users))
+
+
+class UserRouteHandler(APIHandler):
+    @tornado.web.authenticated
+    async def get(self):
+        user = self.current_user
+        self.finish(user)
 
 
 def setup_handlers(web_app):
@@ -38,7 +52,11 @@ def setup_handlers(web_app):
 
     base_url = web_app.settings["base_url"]
     users_route_pattern = url_path_join(base_url, "auth", "users")
-    handlers = [(users_route_pattern, UsersRouteHandler)]
+    user_route_pattern = url_path_join(base_url, "auth", "user")
+    handlers = [
+        (users_route_pattern, UsersRouteHandler),
+        (user_route_pattern, UserRouteHandler),
+    ]
     web_app.add_handlers(host_pattern, handlers)
 
 
@@ -141,15 +159,14 @@ ServerApp.logout_handler_class = MyLogoutHandler
 
 # Authorization
 
-def my_authorization_method(self, user, action, resource):
-    """My override for handling authorization in Jupyter services."""
+def user_is_authorized(self, user, action, resource):
+    login = user["login"]
+    if login not in AUTHORIZATION:
+        return False
+    if resource not in AUTHORIZATION[login]:
+        return False
+    if action not in AUTHORIZATION[login][resource]:
+        return False
+    return AUTHORIZATION[login][resource][action]
 
-    # Add logic here to check if user is allowed.
-    # For example, here is an example of a read-only server
-    #if action in ['write', 'execute']:
-    #    return False
-
-    return True
-
-# Patch the user_is_authorized method with my own method.
-JupyterHandler.user_is_authorized = my_authorization_method
+JupyterHandler.user_is_authorized = user_is_authorized

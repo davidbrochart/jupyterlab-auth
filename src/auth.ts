@@ -28,9 +28,9 @@ const auth: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    requestAPI<any>('users').then(data => {
+    requestAPI<any>('user').then(data => {
       const menu = new Menu({ commands: app.commands });
-      menu.title.label = data.me;
+      menu.title.label = data.login;
       menu.addItem({
         command: 'user:logout',
         args: {}
