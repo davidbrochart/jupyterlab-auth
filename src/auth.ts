@@ -36,6 +36,10 @@ const auth: JupyterFrontEndPlugin<void> = {
         args: {}
       });
       mainMenu.addMenu(menu, { rank: 2000 });
+
+      //...awareness.setLocalStateField('user', {
+      //  name: data.name,
+      //});
     });
 
     const widget = new AuthWidget();
