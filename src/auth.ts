@@ -15,7 +15,7 @@ import { Menu } from '@lumino/widgets';
 import { requestAPI } from './handler';
 
 const auth: JupyterFrontEndPlugin<void> = {
-  id: 'jupyterlab-auth',
+  id: 'jupyterlab-auth:auth',
   requires: [IMainMenu, IRouter],
   autoStart: true,
   activate: (app: JupyterFrontEnd, mainMenu: IMainMenu, router: IRouter) => {

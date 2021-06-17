@@ -1,5 +1,14 @@
+import { JupyterFrontEndPlugin } from '@jupyterlab/application';
+
 import auth from './auth';
+
+import docProviderPlugin from './docprovider';
 
 import '../style/index.css';
 
-export default [auth];
+const plugins: JupyterFrontEndPlugin<any>[] = [
+  auth,
+	docProviderPlugin
+];
+
+export default plugins;
