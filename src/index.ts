@@ -6,9 +6,6 @@ import docProviderPlugin from './docprovider';
 
 import '../style/index.css';
 
-const plugins: JupyterFrontEndPlugin<any>[] = [
-  auth,
-	docProviderPlugin
-];
+const plugins: JupyterFrontEndPlugin<any>[] = [auth, docProviderPlugin];
 
 export default plugins;
