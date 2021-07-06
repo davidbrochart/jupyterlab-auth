@@ -19,9 +19,9 @@ mamba create -n jupyterlab-auth-dev
 conda activate jupyterlab-auth-dev
 mamba install pip nodejs
 
-wget -q https://github.com/davidbrochart/jupyterlab/archive/yjs_awareness.tar.gz -O jlab.tar.gz
+wget -q https://github.com/jupyterlab/jupyterlab/archive/master.tar.gz -O jlab.tar.gz
 tar zxf jlab.tar.gz
-cd jupyterlab-yjs_awareness
+cd jupyterlab-master
 pip install -e .
 jlpm
 jlpm build
@@ -30,6 +30,7 @@ cd ..
 pip install -e .
 jupyter labextension develop . --overwrite
 jupyter server extension enable jupyterlab-auth
+jlpm
 jlpm run build
 jupyter server extension list
 jupyter labextension list

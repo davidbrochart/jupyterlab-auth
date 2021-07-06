@@ -3,6 +3,7 @@ include README.md
 include pyproject.toml
 include jupyter-config/jupyterlab-auth.json
 
+include auth.json
 include package.json
 include install.json
 include ts*.json
