@@ -8,3 +8,17 @@
   justify-content: center;
 /*  align-items: center; */
 }
+
+.user-img {
+  margin: 2px;
+  width: 25px;
+  height: 25px;
+  border-radius: 90px;
+  fill: var(--jp-quetz-primary-color);
+  color: var(--jp-quetz-primary-color);
+}
+
+.topbar-spacer {
+  flex-grow: 1;
+  flex-shrink: 1;
+}

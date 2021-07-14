@@ -11,10 +11,18 @@ from jupyter_server.auth.login import LoginHandler
 from jupyter_server.auth.logout import LogoutHandler
 
 import tornado
-from tornado import escape
+from tornado import escape, httpclient
 from tornado.auth import OAuth2Mixin
-from tornado import httpclient
+from tornado.httputil import url_concat
 
+# Create 'jupyterlab-auth/config.json' file with the following secrets:
+# "client_id": ""
+# "client_secret": ""
+# "redirect_uri": ""
+
+CLIENT_ID = ""
+CLIENT_SECRET = ""
+REDIRECT_URI = ""
 
 USERS = {}
 
@@ -23,6 +31,18 @@ auth_fname = "auth.json"
 if os.path.exists(auth_fname):
     with open(auth_fname) as f:
         AUTHORIZATION = json.load(f)
+
+config_file = os.path.join(os.path.dirname(__file__), "config.json")
+print(config_file)
+if os.path.exists(config_file):
+    print("config:", config_file)
+    with open(config_file) as f:
+        conf = json.load(f)
+        print("config:", conf)
+        CLIENT_ID = conf["client_id"]
+        CLIENT_SECRET = conf["client_secret"]
+        REDIRECT_URI = conf["redirect_uri"]
+
 
 
 class UsersRouteHandler(APIHandler):
@@ -44,6 +64,8 @@ class UserRouteHandler(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         user = self.current_user
+        print("*"*100)
+        print("user", user)
         self.finish(user)
 
 
@@ -61,14 +83,12 @@ def setup_handlers(web_app):
 
 
 def get_current_user(self):
+    # Use access_token to get the user
     user = self.get_secure_cookie("user")
     if user is None:
-        return
-    user = json.loads(user.decode())
-    login = user["login"]
-    if login not in USERS:
-        USERS[login] = user
-    return user
+        return None
+    else :
+        return json.loads(user.decode())
 
 JupyterHandler.get_current_user = get_current_user
 
@@ -76,82 +96,89 @@ OAuth2Mixin._OAUTH_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
 OAuth2Mixin._OAUTH_ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token"
 
 class MyLoginHandler(OAuth2Mixin, LoginHandler):
-    async def get_access_token(self, code):
-        client_id = self.get_secure_cookie("client_id")
-        client_secret = self.get_secure_cookie("client_secret")
-        if not (client_id and client_secret):
-            return ""
-        body = urllib.parse.urlencode(
-            {
-                "code": code,
-                "client_id": client_id.decode(),
-                "client_secret": client_secret.decode()
-            }
-        )
+    async def get_access_token(self, redirect_uri, code):
+        #handler = cast(RequestHandler, self)
         http = self.get_auth_http_client()
+        body = urllib.parse.urlencode({})
+
         response = await http.fetch(
-            self._OAUTH_ACCESS_TOKEN_URL,
+            url_concat(
+                self._OAUTH_ACCESS_TOKEN_URL,
+                {
+                    "redirect_uri": redirect_uri,
+                    "code": code,
+                    "client_id": CLIENT_ID,
+                    "client_secret": CLIENT_SECRET,
+                    "grant_type": "authorization_code"
+                }
+            ),
             method="POST",
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            body=body,
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Accept": "application/json"
+            },
+            body=body
         )
-        r = urllib.parse.parse_qs(response.body.decode())
-        if "access_token" in r:
-            return r["access_token"][0]
-        return ""
+        print("*"*100)
+        print("response", response.body)
+        return escape.json_decode(response.body)
 
     async def get(self):
-        if self.current_user:
-            self.redirect("/")
-            return
-        client_id = self.get_secure_cookie("client_id")
-        client_secret = self.get_secure_cookie("client_secret")
-        if not (client_id and client_secret):
-            self.write('<html><body><form action="/login" method="post">' + self.xsrf_form_html() + \
-                       '<p>Please enter below the client ID and secret that you got from GitHub.</p>'
-                       '<p>Client ID: <input type="text" name="client_id"></p>'
-                       '<p>Client secret: <input type="text" name="client_secret"></p>'
-                       '<input type="submit" value="Sign in">'
-                       '</form></body></html>')
-            return
-        if self.get_argument('code', False):
-            access_token = await self.get_access_token(code=self.get_argument('code'))
-            if not access_token:
-                self.clear_cookie("client_id")
-                self.clear_cookie("client_secret")
-                self.redirect("/login")
-                return
-            response = await httpclient.AsyncHTTPClient().fetch(
-                "https://api.github.com/user",
-                method="GET",
-                headers={"Authorization": "token " + access_token},
-            )
-            body = response.body.decode()
-            user = json.loads(body)
-            USERS[user["login"]] = user
-            self.set_secure_cookie("user", body)
-            self.redirect("/")
-        else:
+        if not self.get_argument('code', False):
             self.authorize_redirect(
-                client_id=client_id.decode(),
-                scope=['read:user'],)
+                redirect_uri=REDIRECT_URI,
+                client_id=CLIENT_ID,
+                client_secret=CLIENT_SECRET,
+                response_type='code',
+                scope=['read:user']
+            )
+            print("*"*100)
+            print("auth")
+            return
 
-    def post(self):
-        self.set_secure_cookie("client_id", self.get_argument("client_id"))
-        self.set_secure_cookie("client_secret", self.get_argument("client_secret"))
-        self.redirect("/login")
+        access_token = self.get_secure_cookie("access_token")
+        if not access_token :
+            access_reply = await self.get_access_token(
+                redirect_uri=REDIRECT_URI,
+                code=self.get_argument('code')
+            )
+            print("*"*100)
+            print("access_token", access_reply)
+            # TODO: store access_token
+            access_token = access_reply['access_token']
+            self.set_secure_cookie("access_token", access_token)
+            
+        
+        else:
+            access_token = access_token.decode()
+        
+        response = await httpclient.AsyncHTTPClient().fetch(
+            "https://api.github.com/user",
+            headers={
+                "Authorization": "token " + access_token,
+            }
+        )
+        print("*"*100)
+        print("user_req", response.body)
+
+        body = response.body.decode()
+        self.set_secure_cookie("user", body)
+        user = json.loads(body)
+        USERS[user["login"]] = user
+        self.redirect("/")
 
 class MyLogoutHandler(LogoutHandler):
     def get(self):
+        print("logout")
         user = self.current_user
         if user is not None:
             login = user["login"]
             if login in USERS:
                 del USERS[login]
+        
+        self.clear_cookie("access_token")
         self.clear_cookie("user")
-        self.clear_cookie("client_id")
-        self.clear_cookie("client_secret")
-        self.redirect("/login")
+        self.redirect("/")
 
 ServerApp.login_handler_class = MyLoginHandler
 ServerApp.logout_handler_class = MyLogoutHandler
