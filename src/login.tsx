@@ -47,7 +47,10 @@ class LogInIcon extends ReactWidget {
     this._profile = null;
   }
 
-  protected onBeforeShow(msg: Message): void {
+  protected onAfterAttach(msg: Message): void {
+    super.onAfterAttach(msg);
+    window.addEventListener('click', this._onClickOutSide);
+
     requestAPI<any>('user').then(data => {
       if (data.login) {
         this._profile = data;
@@ -55,6 +58,18 @@ class LogInIcon extends ReactWidget {
       }
     });
   }
+
+  private _onClickOutSide = (e: MouseEvent): void => {
+    if (!this.node.contains(e.target as Node) && this._isActive) {
+      this._isActive = false;
+      this.update();
+    }
+  };
+
+  private _onClick = (): void => {
+    this._isActive = !this._isActive;
+    this.update();
+  };
 
   private _logIn = () => {
     this._router.navigate('/login', { hard: true });
@@ -70,13 +85,31 @@ class LogInIcon extends ReactWidget {
     if (this._profile) {
       return (
         <div>
-          <a onClick={this._logOut}>
+          <a onClick={this._onClick}>
             <img
               className="user-img"
               src={this._profile.avatar_url}
               alt="avatar"
             />
           </a>
+          <div
+            className={`login-menu ${this._isActive ? 'active' : 'inactive'}`}
+          >
+            <ul>
+              <li key={this._profile.name}>
+                <a>
+                <span>Signed in as {this._profile.login}</span>
+                  
+                </a>
+              </li>
+              <hr />
+              <li key="logout">
+                <a onClick={() => this._logOut()}>
+                  <span>Log out</span>
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       );
     } else {
@@ -87,7 +120,7 @@ class LogInIcon extends ReactWidget {
 
       return (
         <div>
-          <a onClick={this._logIn}>
+          <a onClick={this._onClick}>
             <avatar.react
               className="user-img"
               tag="span"
@@ -95,11 +128,29 @@ class LogInIcon extends ReactWidget {
               height="28px"
             />
           </a>
+          <div
+            className={`login-menu ${this._isActive ? 'active' : 'inactive'}`}
+          >
+            <ul>
+              <li key="Anonymous">
+                <a>
+                <span>Anonymous</span>
+                </a>
+              </li>
+              <hr />
+              <li key="login">
+                <a onClick={() => this._logIn()}>
+                  <span>Log in</span>
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       );
     }
   }
 
+  private _isActive = false;
   private _router: IRouter;
   private _profile: { [key: string]: any };
 }
