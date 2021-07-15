@@ -44,7 +44,9 @@ class LogInIcon extends ReactWidget {
     this.title.caption = 'LogIn with GitHub';
 
     this._router = router;
-    this._profile = null;
+    this._profile = {
+      login: "Anonymous"
+    };
   }
 
   protected onAfterAttach(msg: Message): void {
@@ -82,7 +84,8 @@ class LogInIcon extends ReactWidget {
   };
 
   render(): React.ReactElement {
-    if (this._profile) {
+    console.debug(this._profile);
+    if (this._profile.login !== "Anonymous") {
       return (
         <div>
           <a onClick={this._onClick}>
@@ -98,7 +101,7 @@ class LogInIcon extends ReactWidget {
             <ul>
               <li key={this._profile.name}>
                 <a>
-                <span>Signed in as {this._profile.login}</span>
+                <span>Logged in as {this._profile.login}</span>
                   
                 </a>
               </li>
@@ -134,7 +137,7 @@ class LogInIcon extends ReactWidget {
             <ul>
               <li key="Anonymous">
                 <a>
-                <span>Anonymous</span>
+                <span>Logged in as {this._profile.login}</span>
                 </a>
               </li>
               <hr />

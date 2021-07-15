@@ -136,8 +136,9 @@ class MyLoginHandler(OAuth2Mixin, LoginHandler):
             print("auth")
             return
 
-        access_token = self.get_secure_cookie("access_token")
-        if not access_token :
+        access_token = self.get_secure_cookie("access_token").decode()
+        print("access_token", access_token)
+        if not access_token or access_token == "Anonymous" :
             access_reply = await self.get_access_token(
                 redirect_uri=REDIRECT_URI,
                 code=self.get_argument('code')
@@ -152,20 +153,23 @@ class MyLoginHandler(OAuth2Mixin, LoginHandler):
         else:
             access_token = access_token.decode()
         
-        response = await httpclient.AsyncHTTPClient().fetch(
-            "https://api.github.com/user",
-            headers={
-                "Authorization": "token " + access_token,
-            }
-        )
-        print("*"*100)
-        print("user_req", response.body)
+        if access_token or access_token != "Anonymous" :
+            response = await httpclient.AsyncHTTPClient().fetch(
+                "https://api.github.com/user",
+                headers={
+                    "Authorization": "token " + access_token,
+                }
+            )
+            print("*"*100)
+            print("user_req", response.body)
 
-        body = response.body.decode()
-        self.set_secure_cookie("user", body)
-        user = json.loads(body)
-        USERS[user["login"]] = user
-        self.redirect("/")
+            body = response.body.decode()
+            self.set_secure_cookie("user", body)
+            user = json.loads(body)
+            USERS[user["login"]] = user
+            self.redirect("/")
+        
+        self.redirect("/login")
 
 class MyLogoutHandler(LogoutHandler):
     def get(self):
@@ -178,6 +182,12 @@ class MyLogoutHandler(LogoutHandler):
         
         self.clear_cookie("access_token")
         self.clear_cookie("user")
+
+        # TODO: get random names for users
+        user = json.dumps({ "login": "Anonymous" })
+        USERS["Anonymous"] = user
+        self.set_secure_cookie("access_token", "Anonymous")
+        self.set_secure_cookie("user", user)
         self.redirect("/")
 
 ServerApp.login_handler_class = MyLoginHandler
