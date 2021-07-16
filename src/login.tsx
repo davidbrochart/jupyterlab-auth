@@ -73,12 +73,10 @@ class LogInIcon extends ReactWidget {
 
   private _logIn = () => {
     this._router.navigate('/login', { hard: true });
-    console.debug('Route to login');
   };
 
   private _logOut = () => {
     this._router.navigate('/logout', { hard: true });
-    console.debug('Route to logout');
   };
 
   render(): React.ReactElement {
