@@ -73,7 +73,14 @@ class LogInIcon extends ReactWidget {
           if (username.length > 1) {
             name += username[1].substring(0, 1).toLocaleUpperCase();
           }
-          
+
+          // send name to the server
+          const init = {
+            method: 'POST',
+            body: '{"name": "' + value.value + '"}'
+          };
+          requestAPI<any>('anonymous', init);
+
           this._profile = {
             login: value.value,
             avatar: name,

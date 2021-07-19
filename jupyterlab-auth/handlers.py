@@ -42,7 +42,7 @@ if os.path.exists(config_file):
 
 
 
-class UsersRouteHandler(APIHandler):
+class GetUsersHandler(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         users = {"users": []}
@@ -57,11 +57,17 @@ class UsersRouteHandler(APIHandler):
         self.finish(json.dumps(users))
 
 
-class UserRouteHandler(APIHandler):
+class GetUserHandler(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         user = self.current_user
         self.finish(user)
+
+
+class PostAnonymousHandler(APIHandler):
+    @tornado.web.authenticated
+    async def post(self):
+        name = json.loads(self.request.body.decode())["name"]
 
 
 def setup_handlers(web_app):
@@ -70,9 +76,11 @@ def setup_handlers(web_app):
     base_url = web_app.settings["base_url"]
     users_route_pattern = url_path_join(base_url, "auth", "users")
     user_route_pattern = url_path_join(base_url, "auth", "user")
+    anonymous_route_pattern = url_path_join(base_url, "auth", "anonymous")
     handlers = [
-        (users_route_pattern, UsersRouteHandler),
-        (user_route_pattern, UserRouteHandler),
+        (users_route_pattern, GetUsersHandler),
+        (user_route_pattern, GetUserHandler),
+        (anonymous_route_pattern, PostAnonymousHandler),
     ]
     web_app.add_handlers(host_pattern, handlers)
 
@@ -93,7 +101,6 @@ OAuth2Mixin._OAUTH_ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_tok
 
 class MyLoginHandler(OAuth2Mixin, LoginHandler):
     async def get_access_token(self, redirect_uri, code):
-        #handler = cast(RequestHandler, self)
         http = self.get_auth_http_client()
         body = urllib.parse.urlencode({})
 
@@ -161,7 +168,7 @@ class MyLogoutHandler(LogoutHandler):
             login = user["login"]
             if login in USERS:
                 del USERS[login]
-        
+
         self.clear_cookie("access_token")
         self.clear_cookie("user")
         self.set_secure_cookie("anonymous", "true")
