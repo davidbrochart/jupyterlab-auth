@@ -33,12 +33,9 @@ if os.path.exists(auth_fname):
         AUTHORIZATION = json.load(f)
 
 config_file = os.path.join(os.path.dirname(__file__), "config.json")
-print(config_file)
 if os.path.exists(config_file):
-    print("config:", config_file)
     with open(config_file) as f:
         conf = json.load(f)
-        print("config:", conf)
         CLIENT_ID = conf["client_id"]
         CLIENT_SECRET = conf["client_secret"]
         REDIRECT_URI = conf["redirect_uri"]
@@ -64,8 +61,6 @@ class UserRouteHandler(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         user = self.current_user
-        print("*"*100)
-        print("user", user)
         self.finish(user)
 
 
@@ -83,12 +78,13 @@ def setup_handlers(web_app):
 
 
 def get_current_user(self):
-    # Use access_token to get the user
     user = self.get_secure_cookie("user")
-    if user is None:
-        return None
-    else :
+    if user:
         return json.loads(user.decode())
+
+    anonymous = self.get_secure_cookie("anonymous")
+    if anonymous:
+        return {"anonymous": True}
 
 JupyterHandler.get_current_user = get_current_user
 
@@ -119,8 +115,6 @@ class MyLoginHandler(OAuth2Mixin, LoginHandler):
             },
             body=body
         )
-        print("*"*100)
-        print("response", response.body)
         return escape.json_decode(response.body)
 
     async def get(self):
@@ -132,48 +126,36 @@ class MyLoginHandler(OAuth2Mixin, LoginHandler):
                 response_type='code',
                 scope=['read:user']
             )
-            print("*"*100)
-            print("auth")
             return
 
-        access_token = self.get_secure_cookie("access_token").decode()
-        print("access_token", access_token)
-        if not access_token or access_token == "Anonymous" :
+        access_token = self.get_secure_cookie("access_token")
+        if not access_token :
             access_reply = await self.get_access_token(
                 redirect_uri=REDIRECT_URI,
                 code=self.get_argument('code')
             )
-            print("*"*100)
-            print("access_token", access_reply)
             # TODO: store access_token
             access_token = access_reply['access_token']
             self.set_secure_cookie("access_token", access_token)
-            
-        
         else:
             access_token = access_token.decode()
-        
-        if access_token or access_token != "Anonymous" :
-            response = await httpclient.AsyncHTTPClient().fetch(
-                "https://api.github.com/user",
-                headers={
-                    "Authorization": "token " + access_token,
-                }
-            )
-            print("*"*100)
-            print("user_req", response.body)
 
-            body = response.body.decode()
-            self.set_secure_cookie("user", body)
-            user = json.loads(body)
-            USERS[user["login"]] = user
-            self.redirect("/")
-        
-        self.redirect("/login")
+        response = await httpclient.AsyncHTTPClient().fetch(
+            "https://api.github.com/user",
+            headers={
+                "Authorization": "token " + access_token,
+            }
+        )
+
+        body = response.body.decode()
+        self.set_secure_cookie("user", body)
+        self.clear_cookie("anonymous")
+        user = json.loads(body)
+        USERS[user["login"]] = user
+        self.redirect("/")
 
 class MyLogoutHandler(LogoutHandler):
     def get(self):
-        print("logout")
         user = self.current_user
         if user is not None:
             login = user["login"]
@@ -182,12 +164,7 @@ class MyLogoutHandler(LogoutHandler):
         
         self.clear_cookie("access_token")
         self.clear_cookie("user")
-
-        # TODO: get random names for users
-        user = json.dumps({ "login": "Anonymous" })
-        USERS["Anonymous"] = user
-        self.set_secure_cookie("access_token", "Anonymous")
-        self.set_secure_cookie("user", user)
+        self.set_secure_cookie("anonymous", "true")
         self.redirect("/")
 
 ServerApp.login_handler_class = MyLoginHandler
