@@ -7,7 +7,12 @@ import {
 
 import { LabIcon } from '@jupyterlab/ui-components';
 
-import { ReactWidget } from '@jupyterlab/apputils';
+import { ReactWidget, InputDialog } from '@jupyterlab/apputils';
+
+import {
+  getRandomColor,
+  getAnonymousUserName
+} from '@jupyterlab/docprovider/lib/awareness';
 
 import { Message } from '@lumino/messaging';
 
@@ -54,7 +59,29 @@ class LogInIcon extends ReactWidget {
     window.addEventListener('click', this._onClickOutSide);
 
     requestAPI<any>('user').then(data => {
-      if (data.login) {
+      console.debug("Data: ", data);
+      if (data.anonymous) {
+        InputDialog.getText({
+          title: "User",
+          label: "Who are you?",
+          okLabel: "Save",
+          text: getAnonymousUserName()
+        }).then( value => {
+          console.debug("Value:", value);
+          const username = value.value.split(' ');
+          let name = username[0].substring(0, 1).toLocaleUpperCase();
+          if (username.length > 1) {
+            name += username[1].substring(0, 1).toLocaleUpperCase();
+          }
+          
+          this._profile = {
+            login: value.value,
+            avatar: name,
+            color: getRandomColor()
+          };
+          this.update();
+        });
+      } else {
         this._profile = data;
         this.update();
       }
@@ -83,49 +110,16 @@ class LogInIcon extends ReactWidget {
 
   render(): React.ReactElement {
     console.debug(this._profile);
-    if (this._profile.login !== "Anonymous") {
+    const getAvatar = () => {
       return (
-        <div>
-          <a onClick={this._onClick}>
-            <img
-              className="user-img"
-              src={this._profile.avatar_url}
-              alt="avatar"
-            />
-          </a>
+        <div className="login-container">
           <div
-            className={`login-menu ${this._isActive ? 'active' : 'inactive'}`}
+            onClick={this._onClick}
+            className="login-icon"
+            style={{backgroundColor: this._profile.color}}
           >
-            <ul>
-              <li key={this._profile.name}>
-                <div><span>Logged in as {this._profile.login}</span></div>
-              </li>
-              <hr />
-              <li key="logout" className="login-menu-clickable">
-                <a onClick={() => this._logOut()}>
-                  <span>Log out</span>
-                </a>
-              </li>
-            </ul>
+            <span>{this._profile.avatar}</span>
           </div>
-        </div>
-      );
-    } else {
-      const avatar = new LabIcon({
-        name: 'github_icon',
-        svgstr: github.default
-      });
-
-      return (
-        <div>
-          <a onClick={this._onClick}>
-            <avatar.react
-              className="user-img"
-              tag="span"
-              width="28px"
-              height="28px"
-            />
-          </a>
           <div
             className={`login-menu ${this._isActive ? 'active' : 'inactive'}`}
           >
@@ -135,14 +129,92 @@ class LogInIcon extends ReactWidget {
               </li>
               <hr />
               <li key="login" className="login-menu-clickable">
-                <a onClick={() => this._logIn()}>
+                <div onClick={() => this._logIn()}>
                   <span>Log in</span>
-                </a>
+                </div>
               </li>
             </ul>
           </div>
         </div>
       );
+    }
+
+    const getUserImage = () => {
+      return (
+        <div className="login-container">
+          <div
+            onClick={this._onClick}
+            className="login-icon"
+          >
+            <img
+              className="user-img"
+              src={this._profile.avatar_url}
+              alt="avatar"
+            />
+          </div>
+          <div
+            className={`login-menu ${this._isActive ? 'active' : 'inactive'}`}
+          >
+            <ul>
+              <li key={this._profile.name}>
+                <div><span>Logged in as {this._profile.login}</span></div>
+              </li>
+              <hr />
+              <li key="logout" className="login-menu-clickable">
+                <div onClick={() => this._logOut()}>
+                  <span>Log out</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      );
+    }
+
+    const getGitHubIcon = () => {
+      const avatar = new LabIcon({
+        name: 'github_icon',
+        svgstr: github.default
+      });
+      
+      return (
+        <div className="login-container">
+          <div
+            onClick={this._onClick}
+            className="login-icon"
+          >
+            <avatar.react
+              className="user-img"
+              tag="span"
+              width="28px"
+              height="28px"
+            />
+          </div>
+          <div
+            className={`login-menu ${this._isActive ? 'active' : 'inactive'}`}
+          >
+            <ul>
+              <li key="Anonymous">
+                <div><span>Logged in as {this._profile.login}</span></div>
+              </li>
+              <hr />
+              <li key="login" className="login-menu-clickable">
+                <div onClick={() => this._logIn()}>
+                  <span>Log in</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      );
+    }
+
+    if (this._profile.avatar) {
+      return getAvatar();
+    } else if (this._profile.login) {
+      return getUserImage();
+    } else {
+      return getGitHubIcon();
     }
   }
 

@@ -9,18 +9,45 @@
 /*  align-items: center; */
 }
 
+.topbar-spacer {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.login-container {
+  width: 33px;
+  height: 27px;
+}
+
+.login-icon {
+  margin: auto;
+  margin-top: 1px;
+  width: 25px;
+  height: 25px;
+  border-radius: 90px;
+  display: flex;
+  align-items: center;
+}
+
+.login-icon:hover {
+  cursor: pointer;
+}
+
+.login-icon span {
+  margin: auto;
+  padding-top: 3px;
+  fill: var(--jp-ui-font-color1);
+  color: var(--jp-ui-font-color1);
+  text-align: center;
+  vertical-align: middle;
+}
+
 .user-img {
-  margin: 2px;
   width: 25px;
   height: 25px;
   border-radius: 90px;
   fill: var(--jp-ui-font-color1);
   color: var(--jp-ui-font-color1);
-}
-
-.topbar-spacer {
-  flex-grow: 1;
-  flex-shrink: 1;
 }
 
 .login-menu {
@@ -65,20 +92,18 @@
 
 .login-menu li div {
   margin: auto;
+  display: flex;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .login-menu li div span {
-  color: var(--jp-ui-font-color1);
-}
-
-.login-menu li a {
-  margin: auto;
-}
-
-.login-menu li a span {
+  text-align: center;
+  vertical-align: middle;
   color: var(--jp-ui-font-color1);
 }
 
 .login-menu .login-menu-clickable:hover {
+  cursor: pointer;
   background: var(--jp-layout-color3);
 }
