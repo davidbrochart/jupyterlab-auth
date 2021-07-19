@@ -98,13 +98,10 @@ class LogInIcon extends ReactWidget {
           >
             <ul>
               <li key={this._profile.name}>
-                <a>
-                <span>Logged in as {this._profile.login}</span>
-                  
-                </a>
+                <div><span>Logged in as {this._profile.login}</span></div>
               </li>
               <hr />
-              <li key="logout">
+              <li key="logout" className="login-menu-clickable">
                 <a onClick={() => this._logOut()}>
                   <span>Log out</span>
                 </a>
@@ -134,12 +131,10 @@ class LogInIcon extends ReactWidget {
           >
             <ul>
               <li key="Anonymous">
-                <a>
-                <span>Logged in as {this._profile.login}</span>
-                </a>
+                <div><span>Logged in as {this._profile.login}</span></div>
               </li>
               <hr />
-              <li key="login">
+              <li key="login" className="login-menu-clickable">
                 <a onClick={() => this._logIn()}>
                   <span>Log in</span>
                 </a>

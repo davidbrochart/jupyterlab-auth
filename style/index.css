@@ -52,13 +52,23 @@
 
 .login-menu li {
   list-style: none;
+  margin: auto;
   height: 30px;
   display: flex;
   align-items: center;
+  border-radius: 8px;
 }
 
 .login-menu hr {
   border-color: var(--jp-ui-font-color1);
+}
+
+.login-menu li div {
+  margin: auto;
+}
+
+.login-menu li div span {
+  color: var(--jp-ui-font-color1);
 }
 
 .login-menu li a {
@@ -67,4 +77,8 @@
 
 .login-menu li a span {
   color: var(--jp-ui-font-color1);
+}
+
+.login-menu .login-menu-clickable:hover {
+  background: var(--jp-layout-color3);
 }
