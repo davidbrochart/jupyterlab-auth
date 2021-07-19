@@ -7,7 +7,7 @@ import {
 
 import { LabIcon } from '@jupyterlab/ui-components';
 
-import { ReactWidget, InputDialog } from '@jupyterlab/apputils';
+import { ReactWidget, showDialog, Dialog } from '@jupyterlab/apputils';
 
 import {
   getRandomColor,
@@ -58,29 +58,32 @@ class LogInIcon extends ReactWidget {
     super.onAfterAttach(msg);
     window.addEventListener('click', this._onClickOutSide);
 
-    requestAPI<any>('user').then(data => {
-      console.debug("Data: ", data);
+    requestAPI<any>('user').then( async data => {
       if (data.anonymous) {
-        InputDialog.getText({
-          title: "User",
-          label: "Who are you?",
-          okLabel: "Save",
-          text: getAnonymousUserName()
-        }).then( value => {
-          console.debug("Value:", value);
-          const username = value.value.split(' ');
-          let name = username[0].substring(0, 1).toLocaleUpperCase();
-          if (username.length > 1) {
-            name += username[1].substring(0, 1).toLocaleUpperCase();
-          }
-          
-          this._profile = {
-            login: value.value,
-            avatar: name,
-            color: getRandomColor()
-          };
-          this.update();
+        const body = new UserNameInput(getAnonymousUserName());
+        const value = await showDialog({
+          title: 'Anonymous username',
+          body,
+          hasClose: false,
+          focusNodeSelector: "jp-dialog-input-id",
+          buttons: [Dialog.okButton({
+            label: "Send"
+          })]
         });
+        
+        const username = body.name.split(' ');
+        let name = username[0].substring(0, 1).toLocaleUpperCase();
+        if (username.length > 1) {
+          name += username[1].substring(0, 1).toLocaleUpperCase();
+        }
+        
+        this._profile = {
+          login: value.value,
+          avatar: name,
+          color: getRandomColor()
+        };
+        this.update();
+
       } else {
         this._profile = data;
         this.update();
@@ -221,4 +224,42 @@ class LogInIcon extends ReactWidget {
   private _isActive = false;
   private _router: IRouter;
   private _profile: { [key: string]: any };
+}
+
+export class UserNameInput
+  extends ReactWidget
+  implements Dialog.IBodyWidget<ReactWidget> {
+  
+  constructor(name: string) {
+    super();
+    this._name = name;
+  }
+
+  get name(): string {
+    return this._name;
+  }
+
+  private _handleName = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    this._name = event.target.value;
+    this.update();
+  }
+
+  render(): JSX.Element {
+    return (
+      <div className="lm-Widget p-Widget jp-Input-Dialog jp-Dialog-body">
+        <label>Who are you?</label>
+        <input
+          id="jp-dialog-input-id"
+          type="text"
+          className="jp-mod-styled"
+          value={this._name}
+          onChange={this._handleName}
+        />
+      </div>
+    );
+  }
+
+  private _name: string;
 }
