@@ -9,14 +9,31 @@
 /*  align-items: center; */
 }
 
-.topbar-spacer {
+#jp-topbar-spacer {
   flex-grow: 1;
   flex-shrink: 1;
 }
 
+#jp-UserIcon {
+  width: auto;
+  height: 33px;
+}
+
+#jp-UserMenu {
+  display: flex;
+  flex-direction: row;
+}
+
 .login-container {
-  width: 33px;
   height: 27px;
+  display: flex;
+  flex-direction: row;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.login-container:hover {
+  cursor: pointer;
 }
 
 .login-icon {
@@ -29,17 +46,13 @@
   align-items: center;
 }
 
-.login-icon:hover {
-  cursor: pointer;
-}
-
 .login-icon span {
   margin: auto;
   padding-top: 3px;
-  fill: var(--jp-ui-font-color1);
-  color: var(--jp-ui-font-color1);
   text-align: center;
   vertical-align: middle;
+  fill: var(--jp-ui-font-color1);
+  color: var(--jp-ui-font-color1);
 }
 
 .user-img {
@@ -50,60 +63,52 @@
   color: var(--jp-ui-font-color1);
 }
 
-.login-menu {
-  width: 200px;
-  position: fixed;
-  top: 35px;
-  right: 3px;
-  background: var(--jp-layout-color1);
-  border-radius: 8px;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-20px);
-  transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
-  z-index: 100;
-}
-
-.login-menu.active {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.login-menu ul {
-  list-style: none;
-  margin: 0px;
-  padding: 10px;
-}
-
-.login-menu li {
-  list-style: none;
+.login-username {
   margin: auto;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  border-radius: 8px;
-}
-
-.login-menu hr {
-  border-color: var(--jp-ui-font-color1);
-}
-
-.login-menu li div {
-  margin: auto;
-  display: flex;
-  text-align: center;
-  vertical-align: middle;
-}
-
-.login-menu li div span {
+  margin-left: 8px;
+  padding-top: 3px;
   text-align: center;
   vertical-align: middle;
   color: var(--jp-ui-font-color1);
 }
 
-.login-menu .login-menu-clickable:hover {
-  cursor: pointer;
-  background: var(--jp-layout-color3);
+.jp-UserMenu-dropdown {
+  height: 30px;
+  padding: 4px;
+  padding-bottom: 0px;
+}
+
+.jp-github-icon {
+  margin-top: 4px;
+}
+
+.jp-Dialog-container {
+  min-height: 140;
+  overflow: hidden;
+}
+
+.jp-UserPanel span {
+  font-size: 12px;
+}
+
+.jp-UserPanel h5 {
+  margin-bottom: 0px;
+}
+
+.panel-container {
+  height: 27px;
+  display: flex;
+  flex-direction: row;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.panel-username {
+  margin: auto;
+  margin-left: 8px;
+  padding-top: 3px;
+  text-align: center;
+  vertical-align: middle;
+  color: var(--jp-ui-font-color1);
+  font-size: 12px;
 }

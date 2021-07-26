@@ -2,6 +2,7 @@ import json
 import hashlib
 import os
 import urllib
+import uuid
 
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.base.handlers import JupyterHandler
@@ -40,20 +41,12 @@ if os.path.exists(config_file):
         CLIENT_SECRET = conf["client_secret"]
         REDIRECT_URI = conf["redirect_uri"]
 
-
-
 class GetUsersHandler(APIHandler):
     @tornado.web.authenticated
     async def get(self):
-        users = {"users": []}
-        for login in USERS:
-            users["users"].append(
-                {
-                    "login": login,
-                    "name": USERS[login]["name"],
-                    "avatar_url": USERS[login]["avatar_url"]
-                }
-            )
+        users = []
+        for id in USERS :
+            users.append(USERS[id])
         self.finish(json.dumps(users))
 
 
@@ -63,43 +56,7 @@ class GetUserHandler(APIHandler):
         user = self.current_user
         self.finish(user)
 
-
-class PostAnonymousHandler(APIHandler):
-    @tornado.web.authenticated
-    async def post(self):
-        name = json.loads(self.request.body.decode())["name"]
-
-
-def setup_handlers(web_app):
-    host_pattern = ".*$"
-
-    base_url = web_app.settings["base_url"]
-    users_route_pattern = url_path_join(base_url, "auth", "users")
-    user_route_pattern = url_path_join(base_url, "auth", "user")
-    anonymous_route_pattern = url_path_join(base_url, "auth", "anonymous")
-    handlers = [
-        (users_route_pattern, GetUsersHandler),
-        (user_route_pattern, GetUserHandler),
-        (anonymous_route_pattern, PostAnonymousHandler),
-    ]
-    web_app.add_handlers(host_pattern, handlers)
-
-
-def get_current_user(self):
-    user = self.get_secure_cookie("user")
-    if user:
-        return json.loads(user.decode())
-
-    anonymous = self.get_secure_cookie("anonymous")
-    if anonymous:
-        return {"anonymous": True}
-
-JupyterHandler.get_current_user = get_current_user
-
-OAuth2Mixin._OAUTH_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
-OAuth2Mixin._OAUTH_ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token"
-
-class MyLoginHandler(OAuth2Mixin, LoginHandler):
+class GitHubLoginHandler(OAuth2Mixin, LoginHandler):
     async def get_access_token(self, redirect_uri, code):
         http = self.get_auth_http_client()
         body = urllib.parse.urlencode({})
@@ -155,23 +112,98 @@ class MyLoginHandler(OAuth2Mixin, LoginHandler):
         )
 
         body = response.body.decode()
-        self.set_secure_cookie("user", body)
-        self.clear_cookie("anonymous")
-        user = json.loads(body)
-        USERS[user["login"]] = user
+        github_user = json.loads(body)
+        user = {
+            "initialized": True,
+            "anonymous": False,
+            "id": github_user['id'],
+            "name": github_user['name'],
+            "username": github_user['login'],
+            "color": None,
+            "email": github_user['email'],
+            "avatar": github_user['avatar_url']
+        }
+        self.set_secure_cookie("user", json.dumps(user))
         self.redirect("/")
 
+def setup_handlers(web_app):
+    host_pattern = ".*$"
+
+    base_url = web_app.settings["base_url"]
+    users_route_pattern = url_path_join(base_url, "auth", "users")
+    user_route_pattern = url_path_join(base_url, "auth", "user")
+    github_route_pattern = url_path_join(base_url, "auth", "github")
+    handlers = [
+        (users_route_pattern, GetUsersHandler),
+        (user_route_pattern, GetUserHandler),
+        (github_route_pattern, GitHubLoginHandler)
+    ]
+    web_app.add_handlers(host_pattern, handlers)
+
+
+def get_current_user(self):
+    user = self.get_secure_cookie("user")
+    if user:
+        user = json.loads(user.decode())
+        USERS[user['id']] = user
+        return user
+
+JupyterHandler.get_current_user = get_current_user
+
+OAuth2Mixin._OAUTH_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
+OAuth2Mixin._OAUTH_ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token"
+
+class MyLoginHandler(LoginHandler):
+    async def get(self):
+        #TODO: Load anonymous user info from persistent storage?
+        user = json.dumps({
+            "initialized": False,
+            "anonymous": True,
+            "id": str(uuid.uuid4()),
+            "name": None,
+            "username": None,
+            "color": None,
+            "email": None,
+            "avatar": None
+        })
+        self.set_secure_cookie("user", user)
+        self.redirect("/")
+
+    async def post(self):
+        body = json.loads(self.request.body.decode())
+        user = json.dumps({
+            "initialized": True,
+            "anonymous": True,
+            "id": str(uuid.uuid4()),
+            "name": body["name"],
+            "username": body["name"],
+            "color": body["color"],
+            "email": None,
+            "avatar": None
+        })
+        self.set_secure_cookie("user", user)
+
 class MyLogoutHandler(LogoutHandler):
+    @tornado.web.authenticated
     def get(self):
         user = self.current_user
         if user is not None:
-            login = user["login"]
-            if login in USERS:
-                del USERS[login]
+            id = user["id"]
+            if id in USERS:
+                del USERS[id]
 
         self.clear_cookie("access_token")
-        self.clear_cookie("user")
-        self.set_secure_cookie("anonymous", "true")
+        user = json.dumps({
+            "initialized": False,
+            "anonymous": True,
+            "id": str(uuid.uuid4()),
+            "name": None,
+            "username": None,
+            "color": None,
+            "email": None,
+            "avatar": None
+        })
+        self.set_secure_cookie("user", user)
         self.redirect("/")
 
 ServerApp.login_handler_class = MyLoginHandler
@@ -181,7 +213,7 @@ ServerApp.logout_handler_class = MyLogoutHandler
 # Authorization
 
 def user_is_authorized(self, user, action, resource):
-    login = user["login"]
+    login = user["id"]
     if login not in AUTHORIZATION:
         return False
     if resource not in AUTHORIZATION[login]:

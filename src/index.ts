@@ -1,14 +1,18 @@
 import { JupyterFrontEndPlugin } from '@jupyterlab/application';
 
-import auth from './auth';
-import userIcon from './login';
+import user from './user';
+import userMenu from './userMenu';
+import userPanel from './userPanel';
+import github from './signInGitHub';
 import docProviderPlugin from './docprovider';
 
 import '../style/index.css';
 
 const plugins: JupyterFrontEndPlugin<any>[] = [
-  auth,
-  userIcon,
+  user,
+  userMenu,
+  userPanel,
+  github,
   docProviderPlugin
 ];
 
