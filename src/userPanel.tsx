@@ -51,7 +51,6 @@ const userPanel: JupyterFrontEndPlugin<UserPanel> = {
         const state = (model.awareness as Awareness).getStates();
         const collaborators: IUser[] = [];
         state.forEach((value, key) => {
-          console.debug("RTC:", key, value);
 
           const collaborator: IUser = {
             isAnonymous: value.user.isAnonymous,
@@ -122,7 +121,6 @@ export class UserPanel extends ReactWidget {
       }
 
       const data = await resp.json();
-      console.debug("Resp users:", data);
       this._users = [];
       data.forEach( (user: any) => {
         const name = user.name.split(' ');

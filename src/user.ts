@@ -36,7 +36,7 @@ const user: JupyterFrontEndPlugin<User> = {
   activate: (app: JupyterFrontEnd, router: IRouter): User => {
 		const { commands } = app;
 		const user = new User();
-
+		
 		commands.addCommand(CommandIDs.login, {
 			execute: () => {
 				if (!user.isReady) {
@@ -64,11 +64,8 @@ const user: JupyterFrontEndPlugin<User> = {
 									color: user.color
 								})
 							};
-							console.debug("Post:", data.value, user.color);
 							ServerConnection.makeRequest(requestUrl, init, settings)
 							.then( async resp => {
-								const data = await resp.json();
-								console.debug("Resp:", resp, data);
 								user.update();
 							});
 						}
@@ -78,7 +75,7 @@ const user: JupyterFrontEndPlugin<User> = {
 		});
 
 		router.register({
-			pattern: /^\/lab$/,
+			pattern: /^\/lab/,
 			command: CommandIDs.login
 		});
 		
@@ -168,7 +165,6 @@ export class User implements IUser {
       }
 
       const data = await resp.json();
-			console.debug("Resp user:", data);
 			this._isReady = data.initialized;
 			this._isAnonymous = data.anonymous;
 			
