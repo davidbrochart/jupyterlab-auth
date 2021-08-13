@@ -46,7 +46,10 @@ const userPanel: JupyterFrontEndPlugin<UserPanel> = {
     const collaboratorsChanged = (
       tracker: IEditorTracker | INotebookTracker
     ) => {
-      if (tracker.currentWidget === null) {
+      if (
+        tracker.currentWidget === null ||
+        tracker.currentWidget.context.contentsModel === null
+      ) {
         userPanel.collaborators = [];
         return;
       }
@@ -67,7 +70,6 @@ const userPanel: JupyterFrontEndPlugin<UserPanel> = {
         state.forEach((value, key) => {
           const collaborator: IUser = {
             isAnonymous: value.user.isAnonymous,
-            id: value.user.id,
             name: value.user.name,
             username: value.user.username,
             initials: value.user.initials,
@@ -98,6 +100,7 @@ export class UserPanel extends ReactWidget {
   private _profile: User;
   private _users: IUser[];
   private _collaborators: IUser[];
+  private _intervalID: number;
 
   constructor(user: User) {
     super();
@@ -111,6 +114,8 @@ export class UserPanel extends ReactWidget {
     this._profile = user;
     this._users = [];
     this._collaborators = [];
+
+    this._intervalID = setInterval(this.requestUsers, 5000);
   }
 
   get collaborators(): IUser[] {
@@ -122,8 +127,17 @@ export class UserPanel extends ReactWidget {
     this.update();
   }
 
+  dispose() {
+    clearInterval(this._intervalID);
+    super.dispose();
+  }
+
   onBeforeShow(msg: Message): void {
     super.onBeforeShow(msg);
+    this.requestUsers();
+  }
+
+  private requestUsers = (): void => {
     const settings = ServerConnection.makeSettings();
     const requestUrl = URLExt.join(settings.baseUrl, 'auth', 'users');
     ServerConnection.makeRequest(requestUrl, {}, settings).then(async resp => {
@@ -145,7 +159,6 @@ export class UserPanel extends ReactWidget {
 
         const collaborator: IUser = {
           isAnonymous: true,
-          id: user.id,
           name: user.name,
           username: user.username || user.name,
           initials,
@@ -155,10 +168,10 @@ export class UserPanel extends ReactWidget {
         };
         this._users.push(collaborator);
       });
-
+      console.debug('Users:', this._users);
       this.update();
     });
-  }
+  };
 
   render(): JSX.Element {
     return (
@@ -172,7 +185,7 @@ export class UserPanel extends ReactWidget {
         <hr />
         <div className="panel-container">
           {this._users.map(user => {
-            if (this._profile.id !== user.id) {
+            if (this._profile.username !== user.username) {
               return getUserIcon(user);
             }
           })}
@@ -181,10 +194,7 @@ export class UserPanel extends ReactWidget {
         <hr />
         <div className="panel-container">
           {this._collaborators.map(user => {
-            if (
-              this._profile.id !== user.id &&
-              this._profile.username !== user.username
-            ) {
+            if (this._profile.username !== user.username) {
               return getUserIcon(user);
             }
           })}

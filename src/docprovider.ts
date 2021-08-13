@@ -46,7 +46,6 @@ const docProviderPlugin: JupyterFrontEndPlugin<IDocumentProviderFactory> = {
         '#' + env.getParam('--usercolor', getRandomColor().slice(1));
       options.ymodel.awareness.setLocalStateField('user', {
         isAnonymous: user.isAnonymous,
-        id: user.id,
         name: user.name || name,
         username: user.username,
         initials: user.initials,
@@ -58,7 +57,6 @@ const docProviderPlugin: JupyterFrontEndPlugin<IDocumentProviderFactory> = {
       user.changed.connect(user => {
         options.ymodel.awareness.setLocalStateField('user', {
           isAnonymous: user.isAnonymous,
-          id: user.id,
           name: user.name || name,
           username: user.username,
           initials: user.initials,
