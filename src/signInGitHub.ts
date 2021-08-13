@@ -18,31 +18,36 @@ import * as github from '../style/img/github-logo.svg';
  * A namespace for command IDs.
  */
 export namespace CommandIDs {
-	export const github = 'jupyterlab-auth:github';
+  export const github = 'jupyterlab-auth:github';
 }
 
 const plugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlab-auth:github',
   autoStart: true,
   requires: [IRouter, IUser, IUserMenu],
-  activate: (app: JupyterFrontEnd, router: IRouter, user: User, menu: Menu): void => {
-		const { commands } = app;
+  activate: (
+    app: JupyterFrontEnd,
+    router: IRouter,
+    user: User,
+    menu: Menu
+  ): void => {
+    const { commands } = app;
 
-		const icon = new LabIcon({
+    const icon = new LabIcon({
       name: 'githubIcon',
       svgstr: github.default
     });
-		
-		commands.addCommand(CommandIDs.github, {
-			label: "Sign In with GitHub",
-			icon: icon,
+
+    commands.addCommand(CommandIDs.github, {
+      label: 'Sign In with GitHub',
+      icon: icon,
       isEnabled: () => user.isAnonymous,
       //isVisible: () => user.isAnonymous,
-			execute: () => {
-				router.navigate('/auth/github', { hard: true });
-			}
-		});
-		menu.insertItem(0, { command: CommandIDs.github });
+      execute: () => {
+        router.navigate('/auth/github', { hard: true });
+      }
+    });
+    menu.insertItem(0, { command: CommandIDs.github });
 
     user.registerLogInMethod(CommandIDs.github);
   }

@@ -25,7 +25,6 @@ import { User } from './user';
 
 import { IUser } from './tokens';
 
-
 /**
  * The default document provider plugin
  */
@@ -43,10 +42,21 @@ const docProviderPlugin: JupyterFrontEndPlugin<IDocumentProviderFactory> = {
       options: IDocumentProviderFactory.IOptions
     ): IDocumentProvider => {
       const name = env.getParam('--username', getAnonymousUserName());
-      const color = '#' + env.getParam('--usercolor', getRandomColor().slice(1));
-      options.ymodel.awareness.setLocalStateField(
-        'user',
-        {
+      const color =
+        '#' + env.getParam('--usercolor', getRandomColor().slice(1));
+      options.ymodel.awareness.setLocalStateField('user', {
+        isAnonymous: user.isAnonymous,
+        id: user.id,
+        name: user.name || name,
+        username: user.username,
+        initials: user.initials,
+        color: user.color || color,
+        email: user.email,
+        avatar: user.avatar
+      });
+
+      user.changed.connect(user => {
+        options.ymodel.awareness.setLocalStateField('user', {
           isAnonymous: user.isAnonymous,
           id: user.id,
           name: user.name || name,
@@ -54,25 +64,8 @@ const docProviderPlugin: JupyterFrontEndPlugin<IDocumentProviderFactory> = {
           initials: user.initials,
           color: user.color || color,
           email: user.email,
-          avatar: user.avatar,
-        }
-      );
-      
-
-      user.changed.connect( user => {
-        options.ymodel.awareness.setLocalStateField(
-          'user',
-          {
-            isAnonymous: user.isAnonymous,
-            id: user.id,
-            name: user.name || name,
-            username: user.username,
-            initials: user.initials,
-            color: user.color || color,
-            email: user.email,
-            avatar: user.avatar,
-          }
-        );
+          avatar: user.avatar
+        });
       });
 
       return collaborative

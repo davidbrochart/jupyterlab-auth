@@ -14,12 +14,12 @@ import * as userIcon from '../style/img/user.svg';
 
 export class UserNameInput
   extends ReactWidget
-  implements Dialog.IBodyWidget<string> {
-
+  implements Dialog.IBodyWidget<string>
+{
   private _name: string;
   private _user: User;
   private _commands: CommandRegistry;
-  
+
   constructor(user: User, commands: CommandRegistry) {
     super();
     this._user = user;
@@ -31,23 +31,21 @@ export class UserNameInput
     return this._name;
   }
 
-  private _handleName = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ): void => {
+  private _handleName = (event: React.ChangeEvent<HTMLInputElement>): void => {
     this._name = event.target.value;
     this.update();
-  }
+  };
 
   render(): JSX.Element {
     const getButtons = () => {
-      return this._user.logInMethods.map( id => {
-        return(
+      return this._user.logInMethods.map(id => {
+        return (
           <button
             id="jp-Dialog-button"
             className="jp-mod-reject jp-mod-styled"
             onClick={() => this._commands.execute(id)}
           >
-            { this._commands.label(id) }
+            {this._commands.label(id)}
           </button>
         );
       });
@@ -63,8 +61,8 @@ export class UserNameInput
           value={this._name}
           onChange={this._handleName}
         />
-        <hr/>
-        { getButtons() }
+        <hr />
+        {getButtons()}
       </div>
     );
   }
@@ -72,7 +70,7 @@ export class UserNameInput
 
 export class UserIcon extends ReactWidget {
   private _profile: User;
-  
+
   constructor(user: User) {
     super();
     this._profile = user;
@@ -86,18 +84,16 @@ export class UserIcon extends ReactWidget {
       return (
         <div className="login-container">
           {getUserIcon(this._profile)}
-          <span className="login-username">
-            {this._profile.username}
-          </span>
+          <span className="login-username">{this._profile.username}</span>
         </div>
       );
     }
-    
+
     const avatar = new LabIcon({
       name: 'userIcon',
       svgstr: userIcon.default
     });
-  
+
     return (
       <div className="login-container">
         <div className="login-icon">
@@ -117,10 +113,7 @@ export const getUserIcon = (user: IUser) => {
   if (user.avatar) {
     return (
       <div key={user.id} className="login-icon">
-        <img
-          className="user-img"
-          src={user.avatar}
-        />
+        <img className="user-img" src={user.avatar} />
       </div>
     );
   }
@@ -130,7 +123,7 @@ export const getUserIcon = (user: IUser) => {
       <div
         key={user.id}
         className="login-icon"
-        style={{backgroundColor: user.color}}
+        style={{ backgroundColor: user.color }}
       >
         <span>{user.initials}</span>
       </div>
