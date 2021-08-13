@@ -5,6 +5,7 @@ node_modules/
 .ipynb_checkpoints
 *.tsbuildinfo
 jupyterlab-auth/labextension
+jupyterlab-auth/config.json
 
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python

@@ -49,8 +49,8 @@ You will need to authorize JupyterLab to access your GitHub information. We only
 
 You can register a new OAuth application [here](https://github.com/settings/applications/new):
 - Application name: JupyterLab
-- Homepage URL: http://localhost:8888/login
-- Authorization callback URL: http://localhost:8888/login
+- Homepage URL: http://localhost:8888
+- Authorization callback URL: http://localhost:8888/auth/github
 
 `localhost` and `8888` are the IP and port number, respectively. You might have to change them
 according to your particular setup.
