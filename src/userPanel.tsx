@@ -15,11 +15,9 @@ import { IEditorTracker } from '@jupyterlab/fileeditor';
 
 import { INotebookTracker } from '@jupyterlab/notebook';
 
-import { YDocument, YFile, YNotebook } from '@jupyterlab/shared-models';
+import { YFile, YNotebook } from '@jupyterlab/shared-models';
 
 import { Message } from '@lumino/messaging';
-
-import { Awareness } from 'y-protocols/awareness';
 
 import * as React from 'react';
 
