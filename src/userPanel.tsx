@@ -46,7 +46,7 @@ const userPanel: JupyterFrontEndPlugin<UserPanel> = {
     const collaboratorsChanged = (
       tracker: IEditorTracker | INotebookTracker
     ) => {
-      if (tracker.currentWidget === null) {
+      if (tracker.currentWidget === null || tracker.currentWidget.context.contentsModel === null) {
         userPanel.collaborators = [];
         return;
       }
@@ -97,6 +97,7 @@ export class UserPanel extends ReactWidget {
   private _profile: User;
   private _users: IUser[];
   private _collaborators: IUser[];
+  private _intervalID: number;
 
   constructor(user: User) {
     super();
@@ -110,6 +111,8 @@ export class UserPanel extends ReactWidget {
     this._profile = user;
     this._users = [];
     this._collaborators = [];
+
+    this._intervalID = setInterval(this.requestUsers, 5000);
   }
 
   get collaborators(): IUser[] {
@@ -121,8 +124,17 @@ export class UserPanel extends ReactWidget {
     this.update();
   }
 
+  dispose() {
+    clearInterval(this._intervalID);
+    super.dispose();
+  }
+
   onBeforeShow(msg: Message): void {
     super.onBeforeShow(msg);
+    this.requestUsers();
+  }
+
+  private requestUsers = (): void => {
     const settings = ServerConnection.makeSettings();
     const requestUrl = URLExt.join(settings.baseUrl, 'auth', 'users');
     ServerConnection.makeRequest(requestUrl, {}, settings).then(async resp => {
@@ -153,7 +165,7 @@ export class UserPanel extends ReactWidget {
         };
         this._users.push(collaborator);
       });
-
+      console.debug("Users:", this._users);
       this.update();
     });
   }
