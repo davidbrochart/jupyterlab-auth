@@ -46,7 +46,10 @@ const userPanel: JupyterFrontEndPlugin<UserPanel> = {
     const collaboratorsChanged = (
       tracker: IEditorTracker | INotebookTracker
     ) => {
-      if (tracker.currentWidget === null || tracker.currentWidget.context.contentsModel === null) {
+      if (
+        tracker.currentWidget === null ||
+        tracker.currentWidget.context.contentsModel === null
+      ) {
         userPanel.collaborators = [];
         return;
       }
@@ -165,10 +168,10 @@ export class UserPanel extends ReactWidget {
         };
         this._users.push(collaborator);
       });
-      console.debug("Users:", this._users);
+      console.debug('Users:', this._users);
       this.update();
     });
-  }
+  };
 
   render(): JSX.Element {
     return (
@@ -191,9 +194,7 @@ export class UserPanel extends ReactWidget {
         <hr />
         <div className="panel-container">
           {this._collaborators.map(user => {
-            if (
-              this._profile.username !== user.username
-            ) {
+            if (this._profile.username !== user.username) {
               return getUserIcon(user);
             }
           })}
