@@ -112,7 +112,7 @@ export class UserIcon extends ReactWidget {
 export const getUserIcon = (user: IUser) => {
   if (user.avatar) {
     return (
-      <div key={user.id} className="login-icon">
+      <div key={user.username} className="login-icon">
         <img className="user-img" src={user.avatar} />
       </div>
     );
@@ -121,7 +121,7 @@ export const getUserIcon = (user: IUser) => {
   if (!user.avatar) {
     return (
       <div
-        key={user.id}
+        key={user.username}
         className="login-icon"
         style={{ backgroundColor: user.color }}
       >

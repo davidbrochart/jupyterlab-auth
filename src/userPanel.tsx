@@ -67,7 +67,6 @@ const userPanel: JupyterFrontEndPlugin<UserPanel> = {
         state.forEach((value, key) => {
           const collaborator: IUser = {
             isAnonymous: value.user.isAnonymous,
-            id: value.user.id,
             name: value.user.name,
             username: value.user.username,
             initials: value.user.initials,
@@ -145,7 +144,6 @@ export class UserPanel extends ReactWidget {
 
         const collaborator: IUser = {
           isAnonymous: true,
-          id: user.id,
           name: user.name,
           username: user.username || user.name,
           initials,
@@ -172,7 +170,7 @@ export class UserPanel extends ReactWidget {
         <hr />
         <div className="panel-container">
           {this._users.map(user => {
-            if (this._profile.id !== user.id) {
+            if (this._profile.username !== user.username) {
               return getUserIcon(user);
             }
           })}
@@ -182,7 +180,6 @@ export class UserPanel extends ReactWidget {
         <div className="panel-container">
           {this._collaborators.map(user => {
             if (
-              this._profile.id !== user.id &&
               this._profile.username !== user.username
             ) {
               return getUserIcon(user);
